@@ -1,0 +1,36 @@
+# =====================================================================
+#  Configuração do nó de navegação reativa (reactive_avoider)
+#  >>> Para alternar o sensor, altere APENAS a linha "sensor_source". <<<
+# =====================================================================
+
+# Fonte de percepção: "lidar" ou "sonar"
+sensor_source: "lidar"
+
+# ---- Tópicos --------------------------------------------------------
+lidar_topic: "/scan"                 # sensor_msgs/LaserScan
+sonar_topic: "/RosAria/sonar"        # sensor_msgs/PointCloud
+cmd_vel_topic: "/RosAria/cmd_vel"    # geometry_msgs/Twist
+
+# ---- Percepção (iguais para os dois sensores => comparação justa) ----
+max_range: 1.5          # [m] obstáculos além disso são ignorados
+fov_deg: 200.0          # [graus] campo de visão usado (centrado na frente)
+sector_deg: 10.0        # [graus] largura dos setores angulares
+front_half_deg: 30.0    # [graus] meia-abertura do "cone frontal"
+
+# ---- Específicos do LIDAR -------------------------------------------
+lidar_angle_offset: 0.0 # [rad] giro do LIDAR em relação ao robô
+lidar_invert: false     # true se o LIDAR estiver montado de cabeça para baixo
+lidar_min_range: 0.12   # [m] ignora leituras muito próximas (corpo do robô)
+
+# ---- Controlador ----------------------------------------------------
+v_max: 0.25             # [m/s]  velocidade linear máxima
+w_max: 0.8              # [rad/s] velocidade angular máxima
+k_att: 1.0              # ganho de atração para frente
+k_rep: 0.3              # ganho de repulsão
+k_w: 1.5                # ganho angular
+stop_distance: 0.40     # [m] abaixo disso (à frente), gira no lugar
+clear_distance: 0.65    # [m] distância para considerar a frente livre
+slow_distance: 1.0      # [m] abaixo disso, reduz a velocidade linear
+
+control_rate: 10.0      # [Hz]
+sensor_timeout: 1.0     # [s] sem dados do sensor => robô para

@@ -1,0 +1,6 @@
+<launch>
+  <!-- Rodar no NOTEBOOK 1: abre o RViz já configurado
+       (LaserScan, sonars, odometria). -->
+  <node pkg="rviz" type="rviz" name="rviz" output="screen"
+        args="-d $(find pioneer_reactive_nav)/rviz/pioneer.rviz"/>
+</launch>

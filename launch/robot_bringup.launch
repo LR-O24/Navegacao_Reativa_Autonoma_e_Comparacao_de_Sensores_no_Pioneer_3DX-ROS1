@@ -1,0 +1,47 @@
+<launch>
+  <!-- Rodar NO PC EMBARCADO DO ROBÔ.
+       Sobe: driver RosAria (Pioneer), driver do LIDAR e a TF base_link -> laser.
+       O roscore deve estar rodando antes (ou use: roslaunch ... com master já ativo). -->
+
+  <!-- Pioneer -->
+  <arg name="port" default="/dev/ttyUSB0"/>
+
+  <!-- LIDAR: rplidar | urg | none (use "none" se subir o driver manualmente) -->
+  <arg name="lidar_driver" default="rplidar"/>
+  <arg name="lidar_port"   default="/dev/ttyUSB1"/>   <!-- rplidar (serial) -->
+  <arg name="lidar_baud"   default="115200"/>         <!-- A1: 115200 | A2M8: 115200 | A2M12/S1: 256000 -->
+  <arg name="lidar_ip"     default="192.168.0.10"/>   <!-- urg (Ethernet) -->
+  <arg name="lidar_frame"  default="laser"/>
+
+  <!-- Posição do LIDAR em relação ao base_link [m, rad] -->
+  <arg name="laser_x"   default="0.10"/>
+  <arg name="laser_y"   default="0.0"/>
+  <arg name="laser_z"   default="0.20"/>
+  <arg name="laser_yaw" default="0.0"/>
+
+  <node pkg="rosaria" type="RosAria" name="RosAria" output="screen">
+    <param name="port" value="$(arg port)"/>
+  </node>
+
+  <group if="$(eval arg('lidar_driver') == 'rplidar')">
+    <node pkg="rplidar_ros" type="rplidarNode" name="rplidar" output="screen">
+      <param name="serial_port"     value="$(arg lidar_port)"/>
+      <param name="serial_baudrate" value="$(arg lidar_baud)"/>
+      <param name="frame_id"        value="$(arg lidar_frame)"/>
+      <param name="inverted"        value="false"/>
+      <param name="angle_compensate" value="true"/>
+    </node>
+  </group>
+
+  <group if="$(eval arg('lidar_driver') == 'urg')">
+    <node pkg="urg_node" type="urg_node" name="urg_node" output="screen">
+      <param name="ip_address" value="$(arg lidar_ip)"/>
+      <param name="frame_id"   value="$(arg lidar_frame)"/>
+    </node>
+  </group>
+
+  <group unless="$(eval arg('lidar_driver') == 'none')">
+    <node pkg="tf" type="static_transform_publisher" name="base_to_laser"
+          args="$(arg laser_x) $(arg laser_y) $(arg laser_z) $(arg laser_yaw) 0 0 base_link $(arg lidar_frame) 50"/>
+  </group>
+</launch>

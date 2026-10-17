@@ -1,0 +1,42 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+      Cell Size: 0.5
+      Plane Cell Count: 20
+    - Class: rviz/TF
+      Enabled: true
+      Name: TF
+    - Class: rviz/LaserScan
+      Enabled: true
+      Name: LIDAR
+      Topic: /scan
+      Size (m): 0.04
+      Style: Flat Squares
+      Color Transformer: FlatColor
+      Color: 255; 40; 40
+    - Class: rviz/PointCloud
+      Enabled: true
+      Name: Sonars
+      Topic: /RosAria/sonar
+      Size (m): 0.12
+      Style: Spheres
+      Color Transformer: FlatColor
+      Color: 40; 200; 40
+    - Class: rviz/Odometry
+      Enabled: true
+      Name: Odometria
+      Topic: /RosAria/pose
+      Keep: 200
+  Global Options:
+    Fixed Frame: odom
+  Views:
+    Current:
+      Class: rviz/TopDownOrtho
+      Scale: 80
+      Target Frame: <Fixed Frame>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>pioneer_reactive_nav</name>
+  <version>1.0.0</version>
+  <description>
+    Navegação reativa autônoma para o Pioneer 3DX (ROS 1) com seleção de
+    sensor (LIDAR ou sonars) por arquivo .yaml, e ferramentas de análise
+    comparativa entre os sensores.
+  </description>
+  <maintainer email="grupo@exemplo.com">Grupo Pioneer</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <!-- Dependências de execução instaladas à parte (ver README):
+       rosaria, rplidar_ros ou urg_node, rviz, tf, rosbag,
+       python3-numpy, python3-matplotlib -->
+</package>

@@ -1,0 +1,7 @@
+# Dados e resultados pesados
+data/*.bag
+data/*.bag.active
+results/*.png
+__pycache__/
+*.pyc
+.vscode/
