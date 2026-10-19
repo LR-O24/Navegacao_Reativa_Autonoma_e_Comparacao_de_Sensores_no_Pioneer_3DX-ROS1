@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Nó de navegação reativa para o Pioneer 3DX.
@@ -17,6 +17,7 @@ ao mesmo conjunto de setores, a lógica de controle é idêntica e o único
 ponto que muda entre os modos é o subscriber/callback.
 """
 import math
+import time
 
 import rospy
 from geometry_msgs.msg import Twist
@@ -62,8 +63,9 @@ class ReactiveAvoider(object):
         self.obstacles = []            # lista de (angulo, distancia)
         self.last_update = rospy.Time(0)
         self.turn_dir = 0              # 0 = livre, +1 = esquerda, -1 = direita
+        self._last_log = {}
 
-        self.pub = rospy.Publisher(self.cmd_topic, Twist, queue_size=1)
+        self.pub = rospy.Publisher(self.cmd_topic, Twist)
 
         if self.source == "lidar":
             topic = g("~lidar_topic", "/scan")
@@ -81,6 +83,13 @@ class ReactiveAvoider(object):
 
         rospy.Timer(rospy.Duration(1.0 / rate), self.control)
         rospy.on_shutdown(self.stop)
+
+    def log_throttled(self, key, period, fn, msg, *args):
+        # rospy.*_throttle nao existe no ROS Hydro
+        now = time.time()
+        if now - self._last_log.get(key, 0.0) >= period:
+            self._last_log[key] = now
+            fn(msg, *args)
 
     # ------------------------------------------------------------------
     # Callbacks: convertem a leitura bruta para (angulo, distancia)
@@ -135,8 +144,8 @@ class ReactiveAvoider(object):
         age = (rospy.Time.now() - self.last_update).to_sec()
         if self.last_update == rospy.Time(0) or age > self.timeout:
             self.turn_dir = 0
-            rospy.logwarn_throttle(2.0, "Sem dados do sensor (%s): robo parado.",
-                                   self.source)
+            self.log_throttled("sem_dados", 2.0, rospy.logwarn,
+                               "Sem dados do sensor (%s): robo parado.", self.source)
             self.pub.publish(cmd)
             return
 
@@ -177,9 +186,10 @@ class ReactiveAvoider(object):
             scale = max(0.2, min(1.0, scale))
             cmd.linear.x = self.v_max * max(0.0, math.cos(err)) * scale
 
-        rospy.loginfo_throttle(1.0, "[%s] %s frente=%.2fm v=%.2f w=%.2f",
-                               self.source, state, front_min,
-                               cmd.linear.x, cmd.angular.z)
+        self.log_throttled("estado", 1.0, rospy.loginfo,
+                           "[%s] %s frente=%.2fm v=%.2f w=%.2f",
+                           self.source, state, front_min,
+                           cmd.linear.x, cmd.angular.z)
         self.pub.publish(cmd)
 
     def stop(self):

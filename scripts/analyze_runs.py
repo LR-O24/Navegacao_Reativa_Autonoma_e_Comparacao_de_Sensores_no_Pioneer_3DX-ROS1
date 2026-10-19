@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Compara execuções gravadas em rosbag (ex.: LIDAR vs sonar).
@@ -13,16 +13,30 @@ Observação: como o bag grava LIDAR e sonar ao mesmo tempo, a "folga"
 medida pelo LIDAR serve de referência para avaliar quase-colisões
 também nas execuções feitas somente com sonar.
 """
+from __future__ import print_function, division, unicode_literals
+
 import argparse
 import csv
 import math
 import os
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import rosbag
+
+
+def ensure_dir(d):
+    if not os.path.isdir(d):
+        os.makedirs(d)
+
+
+def open_csv(path):
+    if sys.version_info[0] == 2:
+        return open(path, "wb")
+    return open(path, "w", newline="")
 
 
 def load_bag(path, topics, front_deg, lidar_offset):
@@ -112,7 +126,7 @@ def compute_metrics(label, od, cm, sc, so, near_thr, cell, arena):
 
     if sc["h90"].size:
         h = sc["h90"]
-        below = np.nan_to_num(h, nan=np.inf) < near_thr
+        below = np.where(np.isnan(h), np.inf, h) < near_thr
         dt = np.mean(np.diff(sc["t"])) if sc["t"].size > 1 else 0.0
         m["folga_min_lidar_m"] = round(float(np.nanmin(h)), 3)
         m["quase_colisoes_lidar"] = episodes(below)
@@ -143,7 +157,7 @@ def main():
     labels = a.labels or [os.path.splitext(os.path.basename(b))[0] for b in a.bags]
     if len(labels) != len(a.bags):
         raise SystemExit("--labels deve ter o mesmo número de bags.")
-    os.makedirs(a.out, exist_ok=True)
+    ensure_dir(a.out)
     topics = {"odom": a.odom, "cmd": a.cmd, "scan": a.scan, "sonar": a.sonar}
 
     runs, rows = [], []
@@ -158,7 +172,7 @@ def main():
         for k in r:
             if k not in keys:
                 keys.append(k)
-    with open(os.path.join(a.out, "summary.csv"), "w", newline="") as f:
+    with open_csv(os.path.join(a.out, "summary.csv")) as f:
         w = csv.DictWriter(f, fieldnames=keys)
         w.writeheader()
         w.writerows(rows)

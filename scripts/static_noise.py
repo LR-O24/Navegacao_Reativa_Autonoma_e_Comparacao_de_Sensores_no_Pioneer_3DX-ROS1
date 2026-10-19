@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Mede ruído e confiabilidade dos sensores com o robô PARADO.
@@ -10,6 +10,8 @@ robô, grave ~30 s com tools/record_run.sh e rode:
 
 Saídas: impressão no terminal e results/ruido_estatico.png
 """
+from __future__ import print_function, division, unicode_literals
+
 import argparse
 import math
 import os
@@ -33,7 +35,8 @@ def main():
     ap.add_argument("--front-deg", type=float, default=30.0)
     ap.add_argument("--out", default="results")
     a = ap.parse_args()
-    os.makedirs(a.out, exist_ok=True)
+    if not os.path.isdir(a.out):
+        os.makedirs(a.out)
     fr = math.radians(a.front_deg)
 
     R, ts_scan, ang = [], [], None
