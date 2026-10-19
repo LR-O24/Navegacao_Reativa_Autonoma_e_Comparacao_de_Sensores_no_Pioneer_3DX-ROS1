@@ -57,9 +57,11 @@ pioneer_reactive_nav/
 - Ubuntu 20.04 + **ROS Noetic** (Python 3). Para ROS Melodic (Ubuntu 18.04), troque `python3` por `python` na primeira linha de `scripts/reactive_avoider.py`; o controlador é compatível com Python 2. Os scripts de análise exigem Python 3.
 - **RosAria** (driver do Pioneer) instalado e funcional — instalação a partir do código-fonte, conforme a [wiki do ROSARIA](http://wiki.ros.org/ROSARIA).
 - Driver do LIDAR publicando `sensor_msgs/LaserScan` em `/scan`:
-  - RPLIDAR: `sudo apt install ros-noetic-rplidar-ros`
-  - Hokuyo: `sudo apt install ros-noetic-urg-node`
-  - SICK: `sick_scan` (suba manualmente e use `lidar_driver:=none`)
+  - **SICK TiM (TiM551, TiM571, ...)**: `sudo apt install ros-noetic-sick-tim`
+  - **SICK LMS1xx**: `sudo apt install ros-noetic-lms1xx`
+  - **SICK LMS2xx (LMS200/291, serial) — usado neste projeto (LMS291-S05 via RS-232)**: `sudo apt install ros-noetic-sicktoolbox-wrapper`
+  - Outros modelos SICK: `sick_scan` (suba manualmente e use `lidar_driver:=none`)
+  - RPLIDAR: `sudo apt install ros-noetic-rplidar-ros` · Hokuyo: `sudo apt install ros-noetic-urg-node`
 - Ferramentas: `sudo apt install ros-noetic-rviz ros-noetic-rqt-graph ros-noetic-teleop-twist-keyboard python3-numpy python3-matplotlib chrony`
 - Permissão nas portas seriais (no robô): `sudo usermod -aG dialout $USER` e faça logout/login.
 
@@ -252,19 +254,45 @@ Com o Pioneer ligado, conectado por USB-serial e o LIDAR ligado, no **robô** (n
 roslaunch pioneer_reactive_nav robot_bringup.launch
 ```
 
-Argumentos principais (ajuste conforme o hardware do laboratório):
+Argumentos principais (ajuste conforme o hardware do laboratório). O padrão é `lidar_driver:=lms2xx` (SICK LMS291-S05 por RS-232):
 
 ```bash
-# RPLIDAR em /dev/ttyUSB1, 256000 baud (A2M12 / S1)
+# SICK TiM571 por USB
 roslaunch pioneer_reactive_nav robot_bringup.launch \
-    port:=/dev/ttyUSB0 lidar_driver:=rplidar lidar_port:=/dev/ttyUSB1 lidar_baud:=256000
+    port:=/dev/ttyUSB0 lidar_driver:=sick_tim sick_tim_node:=sick_tim571_2050101
 
-# Hokuyo Ethernet
-roslaunch pioneer_reactive_nav robot_bringup.launch lidar_driver:=urg lidar_ip:=192.168.0.11
+# SICK TiM551 por Ethernet (IP do sensor em sick_hostname)
+roslaunch pioneer_reactive_nav robot_bringup.launch \
+    lidar_driver:=sick_tim sick_tim_node:=sick_tim551_2050001 sick_hostname:=192.168.0.1
 
-# LIDAR iniciado manualmente (ex.: SICK)
+# SICK LMS1xx (Ethernet)
+roslaunch pioneer_reactive_nav robot_bringup.launch lidar_driver:=lms1xx lms_host:=192.168.0.1
+
+# SICK LMS291-S05 por RS-232 (padrão do projeto)
+roslaunch pioneer_reactive_nav robot_bringup.launch \
+    port:=/dev/ttyUSB0 lidar_driver:=lms2xx lms2xx_port:=/dev/ttyUSB1 lms2xx_baud:=38400
+
+# Driver iniciado manualmente (ex.: sick_scan)
 roslaunch pioneer_reactive_nav robot_bringup.launch lidar_driver:=none
 ```
+
+#### Notas para o SICK LMS291-S05 (RS-232)
+
+- **Alimentação:** o LMS291 precisa de **24 V DC** (confirme no manual). O Pioneer fornece 12 V, então é necessário um conversor DC-DC ou fonte própria. Sem a alimentação correta o sensor não responde.
+- **Baud rate:** o driver `sicklms` aceita 9600, 19200, 38400 e 500000. Pela RS-232 use **38400** (padrão do launch). 500000 exige adaptador RS-422/USB.
+- **Taxa de scan limitada pela serial:** a 38400 baud o LMS291 entrega bem menos scans por segundo do que LIDARs modernos (os ~75 Hz do datasheet só valem a 500 kbaud). Meça com `rostopic hz /scan`. Se a taxa ficar abaixo de ~1 Hz, aumente `sensor_timeout` no `.yaml`. **Registre essa taxa no relatório**, pois ela entra diretamente na comparação "taxa de atualização" LIDAR × sonar.
+- **Campo de visão e resolução:** 180° com 1° de resolução (padrão do launch: `lms2xx_angle:=180`, `lms2xx_resolution:=1.0`). O controlador usa ±100° e agrupa as leituras em setores de 10°, então os 180° do LMS são suficientes.
+- **Porta serial estável:** o Pioneer (RosAria) e o SICK usam dois adaptadores USB-serial, e os números `ttyUSB0`/`ttyUSB1` podem trocar após reiniciar. Use um nome fixo: `ls -l /dev/serial/by-id/` e passe o caminho completo em `port:=` e `lms2xx_port:=`. Se usar uma serial nativa, a porta costuma ser `/dev/ttyS0`.
+- **Permissão:** `sudo usermod -aG dialout $USER` e novo login.
+- **Se o driver não conectar:** desligue e ligue o LMS (o sensor mantém o último baud configurado), confirme a porta e o baud e inicie o launch de novo.
+- **Frame do scan:** confirme com `rostopic echo -n1 /scan/header/frame_id` e use o mesmo valor em `lidar_frame` (padrão `laser`), senão o RViz não alinha o scan ao robô.
+- **Orientação:** se os obstáculos aparecerem girados ou espelhados no RViz, ajuste `lidar_angle_offset`/`lidar_invert` em `sensor_config.yaml` (e `laser_yaw` no launch). Use `lidar_invert` do `.yaml` em vez do parâmetro `inverted` do driver.
+- **Leituras inválidas:** o SICK pode publicar `inf`, `NaN` ou `0` sem retorno; o controlador já descarta esses valores.
+
+#### Notas para outros SICK (TiM e LMS1xx, Ethernet)
+
+- O nome do executável de `sick_tim` segue o modelo; liste as opções com `ls $(rospack find sick_tim)/launch`. Para USB, instale as regras udev do pacote.
+- O IP padrão de fábrica do TiM5xx e do LMS1xx é `192.168.0.1`, que **conflita** com a rede Wi-Fi se ela usar `192.168.0.x`. Use uma sub-rede própria na Ethernet do sensor e mantenha o `ROS_IP` do robô no IP do Wi-Fi.
 
 Ajuste também a posição do LIDAR em relação ao centro do robô: `laser_x`, `laser_y`, `laser_z`, `laser_yaw`.
 
@@ -424,7 +452,7 @@ Opções úteis: `--near 0.30` (limiar de quase-colisão, em metros), `--cell 0.
 |---|---|
 | **Resolução espacial** | Obstáculos finos (perna de cadeira, cano) detectados ou não; ecos no RViz; suavidade das trajetórias (`trajetorias.png`) |
 | **Zonas cegas e alcance** | `folga_min_*` e `quase_colisoes_lidar`; comportamento perto de paredes inclinadas (reflexão especular dos sonars) e de obstáculos muito próximos |
-| **Ruído e taxa de atualização** | Saída de `static_noise.py`; `rostopic hz`; `taxa_scan_hz` e `taxa_sonar_hz` em `summary.csv` |
+| **Ruído e taxa de atualização** | Saída de `static_noise.py`; `rostopic hz`; `taxa_scan_hz` e `taxa_sonar_hz` em `summary.csv`. Lembre que o LMS291 via RS-232 a 38400 baud tem taxa de scan limitada pela serial |
 | **Desempenho geral** | `distancia_percorrida_m`, `cobertura_estimada_pct`, `pct_tempo_parado_ou_girando` |
 
 Observação: a odometria acumula erro de deriva. Trate as trajetórias como aproximadas e compare execuções curtas e com a mesma posição inicial.
@@ -454,6 +482,7 @@ Observação: a odometria acumula erro de deriva. Trate as trajetórias como apr
 | `/RosAria/sonar` não publica | Sonars desabilitados ou ausentes. Confira com `rostopic list` e no RViz; verifique a configuração do robô. |
 | Sonars aparecem em posição errada no RViz | O controlador assume pontos do sonar em coordenadas do robô. Verifique o `frame_id` da nuvem e a TF correspondente. |
 | Obstáculos do LIDAR aparecem girados/espelhados | Ajuste `lidar_angle_offset` e/ou `lidar_invert` em `sensor_config.yaml`. |
+| `/scan` não aparece com o LMS291 | Confira a alimentação de 24 V, a porta (`/dev/serial/by-id/`), o baud (38400 em RS-232) e as permissões (`dialout`); desligue/ligue o LMS e rode o launch de novo. Mensagens `Baud rate must be in {9600, 19200, 38400, 500000}` indicam baud inválido. |
 | `Permission denied: /dev/ttyUSB0` | `sudo usermod -aG dialout $USER` e novo login. |
 | Robô não se move | Motores desabilitados: `rosservice call /RosAria/enable_motors "{}"`. Confirme o tópico com `rostopic echo /RosAria/cmd_vel`. |
 | Robô para sozinho com `Sem dados do sensor` | O sensor selecionado não está publicando. Confira `rostopic hz` do tópico. |
