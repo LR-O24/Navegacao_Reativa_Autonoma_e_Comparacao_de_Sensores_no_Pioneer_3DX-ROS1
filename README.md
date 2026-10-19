@@ -186,14 +186,14 @@ Siga a [Instalação](#4-instalação) no robô e nos dois notebooks.
 Em **cada terminal** de **cada máquina**, informe apenas o IP do robô (o `ROS_IP` local é descoberto automaticamente):
 
 ```bash
-cd ~/catkin_ws/src/pioneer_reactive_nav
+cd ~/catkin_ws/src/Navegacao_Reativa_Autonoma_e_Comparacao_de_Sensores_no_Pioneer_3DX-ROS1
 source tools/ros_network.sh 192.168.1.100
 ```
 
 Saída esperada (no notebook 1, por exemplo):
 
 ```
-[ros_network] ROS_MASTER_URI = http://192.168.0.10:11311
+[ros_network] ROS_MASTER_URI = http://192.168.1.100:11311
 [ros_network] ROS_IP         = 192.168.0.21
 ```
 
@@ -208,7 +208,7 @@ O resultado equivale a configurar manualmente:
 Para não repetir o comando a cada terminal, acrescente ao final do `~/.bashrc` (ajustando o IP do robô; as linhas funcionam em qualquer máquina):
 
 ```bash
-source ~/catkin_ws/src/pioneer_reactive_nav/tools/ros_network.sh 192.168.0.10
+source ~/catkin_ws/src/Navegacao_Reativa_Autonoma_e_Comparacao_de_Sensores_no_Pioneer_3DX-ROS1/tools/ros_network.sh 192.168.1.100
 ```
 
 > Se a detecção automática falhar (ex.: várias interfaces de rede), passe a interface: `source tools/ros_network.sh 192.168.0.10 wlp3s0`.
@@ -218,7 +218,7 @@ source ~/catkin_ws/src/pioneer_reactive_nav/tools/ros_network.sh 192.168.0.10
 No **robô** (por SSH, se preferir: `ssh usuario@192.168.0.10`):
 
 ```bash
-source ~/catkin_ws/src/pioneer_reactive_nav/tools/ros_network.sh 192.168.0.10
+source ~/catkin_ws/src/Navegacao_Reativa_Autonoma_e_Comparacao_de_Sensores_no_Pioneer_3DX-ROS1/tools/ros_network.sh 192.168.1.100
 roscore
 ```
 

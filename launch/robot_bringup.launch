@@ -3,8 +3,11 @@
        Sobe: driver RosAria (Pioneer), driver do LIDAR e a TF base_link -> laser.
        O roscore deve estar rodando antes. -->
 
-  <!-- Pioneer -->
-  <arg name="port" default="/dev/ttyUSB0"/>
+  <!-- Pioneer.
+       start_rosaria:=false se o RosAria JÁ estiver rodando (nesta ou em outra máquina da rede).
+       Nunca suba dois RosAria: o ROS derruba o nó mais antigo de mesmo nome. -->
+  <arg name="start_rosaria" default="true"/>
+  <arg name="port" default="/dev/ttyS0"/>
 
   <!-- LIDAR: sick_tim | lms1xx | lms2xx | rplidar | urg | none
        (use "none" se subir o driver manualmente, ex.: sick_scan) -->
@@ -24,7 +27,7 @@
   <!-- SICK LMS2xx (serial; LMS200/LMS291-S05) - PADRÃO DESTE PROJETO.
        RS-232 suporta até 38400 baud (500000 só com adaptador RS-422).
        Dica: use um nome estável, ex.: /dev/serial/by-id/usb-... (ls -l /dev/serial/by-id/) -->
-  <arg name="lms2xx_port"       default="/dev/ttyUSB1"/>
+  <arg name="lms2xx_port"       default="/dev/ttyS1"/>
   <arg name="lms2xx_baud"       default="38400"/>
   <arg name="lms2xx_angle"      default="180"/>
   <arg name="lms2xx_resolution" default="1.0"/>
@@ -40,9 +43,11 @@
   <arg name="laser_z"   default="0.20"/>
   <arg name="laser_yaw" default="0.0"/>
 
-  <node pkg="rosaria" type="RosAria" name="RosAria" output="screen">
-    <param name="port" value="$(arg port)"/>
-  </node>
+  <group if="$(arg start_rosaria)">
+    <node pkg="rosaria" type="RosAria" name="RosAria" output="screen">
+      <param name="port" value="$(arg port)"/>
+    </node>
+  </group>
 
   <!-- SICK TiM -->
   <group if="$(eval arg('lidar_driver') == 'sick_tim')">
