@@ -25,7 +25,7 @@ Visualization Manager:
       Name: Sonars
       Topic: /RosAria/sonar
       Size (m): 0.12
-      Style: Spheres
+      Style: Flat Squares
       Color Transformer: FlatColor
       Color: 40; 200; 40
     - Class: rviz/Odometry
@@ -37,6 +37,8 @@ Visualization Manager:
     Fixed Frame: odom
   Views:
     Current:
-      Class: rviz/TopDownOrtho
-      Scale: 80
+      Class: rviz/XYOrbit
+      Distance: 8
+      Pitch: 1.5
+      Yaw: 0
       Target Frame: <Fixed Frame>

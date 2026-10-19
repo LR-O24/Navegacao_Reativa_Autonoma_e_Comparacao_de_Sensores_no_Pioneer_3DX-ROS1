@@ -1,17 +1,10 @@
 <launch>
-  <!-- Nó de navegação reativa.
-       Pode rodar no robô (recomendado) ou em um notebook da rede.
-       O sensor é escolhido em config/sensor_config.yaml (sensor_source).
-
-       Override opcional pela linha de comando (apenas para testes):
-         roslaunch pioneer_reactive_nav reactive_nav.launch sensor_source:=sonar -->
-  <arg name="config"        default="$(find pioneer_reactive_nav)/config/sensor_config.yaml"/>
-  <arg name="sensor_source" default=""/>
+  <!-- No de navegacao reativa (rodar no PC do robo).
+       O sensor e escolhido em config/sensor_config.yaml (sensor_source). -->
+  <arg name="config" default="$(find pioneer_reactive_nav)/config/sensor_config.yaml"/>
 
   <node pkg="pioneer_reactive_nav" type="reactive_avoider.py"
         name="reactive_avoider" output="screen">
     <rosparam command="load" file="$(arg config)"/>
-    <param name="sensor_source" value="$(arg sensor_source)"
-           unless="$(eval arg('sensor_source') == '')"/>
   </node>
 </launch>

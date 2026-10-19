@@ -1,68 +1,36 @@
 <launch>
-  <!-- Rodar NO PC EMBARCADO DO ROBÔ.
-       Sobe: driver RosAria (Pioneer), driver do LIDAR e a TF base_link -> laser.
-       O roscore deve estar rodando antes. -->
+  <!-- Rodar NO PC DO ROBO (onde o SICK esta ligado).
+       Compativel com ROS Hydro (sem $(eval)). O roscore deve estar ativo.
 
-  <!-- Pioneer -->
-  <arg name="port" default="/dev/ttyUSB0"/>
+       Se o RosAria JA estiver rodando (confira: rosnode list), use start_rosaria:=false.
+       Nunca suba dois RosAria: o ROS derruba o no mais antigo de mesmo nome. -->
 
-  <!-- LIDAR: sick_tim | lms1xx | lms2xx | rplidar | urg | none
-       (use "none" se subir o driver manualmente, ex.: sick_scan) -->
-  <arg name="lidar_driver" default="lms2xx"/>
-  <arg name="lidar_frame"  default="laser"/>
+  <arg name="start_rosaria" default="false"/>
+  <arg name="port"          default="/dev/ttyS0"/>
 
-  <!-- SICK TiM (pacote sick_tim): USB ou Ethernet.
-       sick_tim_node: executável do seu modelo, ex.: sick_tim551_2050001,
-                      sick_tim571_2050101, sick_tim310, sick_tim310s01 ...
-       sick_hostname: vazio = USB; IP do sensor = Ethernet (TiM5xx: padrão 192.168.0.1) -->
-  <arg name="sick_tim_node" default="sick_tim571_2050101"/>
-  <arg name="sick_hostname" default=""/>
-
-  <!-- SICK LMS1xx (Ethernet) -->
-  <arg name="lms_host" default="192.168.0.1"/>
-
-  <!-- SICK LMS2xx (serial; LMS200/LMS291-S05) - PADRÃO DESTE PROJETO.
-       RS-232 suporta até 38400 baud (500000 só com adaptador RS-422).
-       Dica: use um nome estável, ex.: /dev/serial/by-id/usb-... (ls -l /dev/serial/by-id/) -->
-  <arg name="lms2xx_port"       default="/dev/ttyUSB1"/>
+  <!-- SICK LMS291-S05 por RS-232 (driver sicktoolbox_wrapper/sicklms).
+       RS-232 suporta ate 38400 baud. start_lidar:=false para subir o driver manualmente. -->
+  <arg name="start_lidar"       default="true"/>
+  <arg name="lms2xx_port"       default="/dev/ttyS1"/>
   <arg name="lms2xx_baud"       default="38400"/>
   <arg name="lms2xx_angle"      default="180"/>
   <arg name="lms2xx_resolution" default="1.0"/>
+  <arg name="lidar_frame"       default="laser"/>
 
-  <!-- RPLIDAR / Hokuyo (outros) -->
-  <arg name="lidar_port" default="/dev/ttyUSB1"/>
-  <arg name="lidar_baud" default="115200"/>
-  <arg name="lidar_ip"   default="192.168.0.10"/>
-
-  <!-- Posição do LIDAR em relação ao base_link [m, rad] -->
+  <!-- Posicao do LIDAR em relacao ao base_link [m, rad] -->
+  <arg name="start_tf"  default="true"/>
   <arg name="laser_x"   default="0.10"/>
   <arg name="laser_y"   default="0.0"/>
   <arg name="laser_z"   default="0.20"/>
   <arg name="laser_yaw" default="0.0"/>
 
-  <node pkg="rosaria" type="RosAria" name="RosAria" output="screen">
-    <param name="port" value="$(arg port)"/>
-  </node>
-
-  <!-- SICK TiM -->
-  <group if="$(eval arg('lidar_driver') == 'sick_tim')">
-    <node pkg="sick_tim" type="$(arg sick_tim_node)" name="sick_tim" output="screen">
-      <param name="frame_id" value="$(arg lidar_frame)"/>
-      <param name="hostname" value="$(arg sick_hostname)"
-             unless="$(eval arg('sick_hostname') == '')"/>
+  <group if="$(arg start_rosaria)">
+    <node pkg="rosaria" type="RosAria" name="RosAria" output="screen">
+      <param name="port" value="$(arg port)"/>
     </node>
   </group>
 
-  <!-- SICK LMS1xx -->
-  <group if="$(eval arg('lidar_driver') == 'lms1xx')">
-    <node pkg="LMS1xx" type="LMS100" name="lms1xx" output="screen">
-      <param name="host" value="$(arg lms_host)"/>
-      <param name="frame_id" value="$(arg lidar_frame)"/>
-    </node>
-  </group>
-
-  <!-- SICK LMS2xx (LMS200/LMS291, serial) -->
-  <group if="$(eval arg('lidar_driver') == 'lms2xx')">
+  <group if="$(arg start_lidar)">
     <node pkg="sicktoolbox_wrapper" type="sicklms" name="sicklms" output="screen">
       <param name="port" value="$(arg lms2xx_port)"/>
       <param name="baud" value="$(arg lms2xx_baud)"/>
@@ -72,26 +40,9 @@
     </node>
   </group>
 
-  <group if="$(eval arg('lidar_driver') == 'rplidar')">
-    <node pkg="rplidar_ros" type="rplidarNode" name="rplidar" output="screen">
-      <param name="serial_port"     value="$(arg lidar_port)"/>
-      <param name="serial_baudrate" value="$(arg lidar_baud)"/>
-      <param name="frame_id"        value="$(arg lidar_frame)"/>
-      <param name="inverted"        value="false"/>
-      <param name="angle_compensate" value="true"/>
-    </node>
-  </group>
-
-  <group if="$(eval arg('lidar_driver') == 'urg')">
-    <node pkg="urg_node" type="urg_node" name="urg_node" output="screen">
-      <param name="ip_address" value="$(arg lidar_ip)"/>
-      <param name="frame_id"   value="$(arg lidar_frame)"/>
-    </node>
-  </group>
-
-  <!-- TF base_link -> laser. O frame deve coincidir com o frame_id publicado em /scan
+  <!-- TF base_link -> laser. O frame deve coincidir com o frame_id de /scan
        (confira: rostopic echo -n1 /scan/header/frame_id). -->
-  <group unless="$(eval arg('lidar_driver') == 'none')">
+  <group if="$(arg start_tf)">
     <node pkg="tf" type="static_transform_publisher" name="base_to_laser"
           args="$(arg laser_x) $(arg laser_y) $(arg laser_z) $(arg laser_yaw) 0 0 base_link $(arg lidar_frame) 50"/>
   </group>
