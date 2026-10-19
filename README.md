@@ -54,6 +54,7 @@ pioneer_reactive_nav/
 
 ## 3. Requisitos
 
+<<<<<<< HEAD
 - **ROS Hydro** (Ubuntu 12.04) ou superior, com `catkin`. O pacote foi escrito para funcionar com o catkin e o CMake antigos do Hydro (CMake 2.8, `package.xml` formato 1, Python 2.7); em Melodic/Noetic também compila. O controlador (`reactive_avoider.py`) roda em Python 2 e 3.
 - **RosAria** funcionando (no laboratório ele já roda no PC do robô).
 - Driver do SICK LMS2xx: pacote `sicktoolbox_wrapper` (nó `sicklms`). Em Hydro: `sudo apt-get install ros-hydro-sicktoolbox-wrapper`.
@@ -61,6 +62,16 @@ pioneer_reactive_nav/
 - **Scripts de análise** (`analyze_runs.py`, `static_noise.py`): rodam em **Python 2.7 ou 3** e precisam de `numpy`, `matplotlib` e do módulo `rosbag`. No Ubuntu 18.04 + Melodic (notebook) use o Python 2.7 do sistema (`sudo apt install python-numpy python-matplotlib`). No robô com Hydro, o NumPy do Ubuntu 12.04 é antigo demais: copie os `.bag` para o notebook (`scp robo:~/catkin_ws/src/<repo>/data/*.bag .`) e analise lá.
 - **Misturar distribuições:** o robô (Hydro) e o notebook (Melodic) se comunicam normalmente, desde que as mensagens usadas tenham a mesma definição. Confira com `rosmsg md5 sensor_msgs/LaserScan nav_msgs/Odometry geometry_msgs/Twist sensor_msgs/PointCloud` nas duas máquinas: os valores devem ser idênticos.
 - Permissão nas portas seriais: usuário no grupo `dialout` (ou rodar como `root`).
+=======
+- Ubuntu 20.04 + **ROS Noetic** (Python 3). Para ROS Melodic (Ubuntu 18.04), troque `python3` por `python` na primeira linha de `scripts/reactive_avoider.py`; o controlador é compatível com Python 2. Os scripts de análise exigem Python 3.
+- **RosAria** (driver do Pioneer) instalado e funcional — instalação a partir do código-fonte, conforme a [wiki do ROSARIA](http://wiki.ros.org/ROSARIA).
+- Driver do LIDAR publicando `sensor_msgs/LaserScan` em `/scan`:
+  - RPLIDAR: `sudo apt install ros-noetic-rplidar-ros`
+  - Hokuyo: `sudo apt install ros-noetic-urg-node`
+  - SICK: `sick_scan` (suba manualmente e use `lidar_driver:=none`)
+- Ferramentas: `sudo apt install ros-noetic-rviz ros-noetic-rqt-graph ros-noetic-teleop-twist-keyboard python3-numpy python3-matplotlib chrony`
+- Permissão nas portas seriais (no robô): `sudo usermod -aG dialout $USER` e faça logout/login.
+>>>>>>> 165a4ee64c617c88a1f827a4fe73c4a5fa281600
 
 ## 4. Instalação
 
@@ -68,7 +79,7 @@ pioneer_reactive_nav/
 
 ```bash
 mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src
-git clone https://github.com/<SEU_USUARIO>/pioneer_reactive_nav.git
+git clone https://github.com/LR-O24/Navegacao_Reativa_Autonoma_e_Comparacao_de_Sensores_no_Pioneer_3DX-ROS1.git
 cd ~/catkin_ws
 catkin_make
 source devel/setup.bash
@@ -164,14 +175,14 @@ Anote (exemplo):
 
 | Máquina | IP |
 |---|---|
-| Robô | `192.168.0.10` |
+| Robô | `192.168.1.100` |
 | Notebook 1 | `192.168.0.21` |
 | Notebook 2 | `192.168.0.22` |
 
 Teste a conectividade entre elas:
 
 ```bash
-ping -c 3 192.168.0.10     # a partir de cada notebook
+ping 192.168.1.100     # a partir de cada notebook
 ```
 
 > Redes com "isolamento de clientes" (AP isolation) bloqueiam a comunicação entre máquinas. Se o `ping` falhar, peça ao responsável pela rede para desativar esse recurso ou use um roteador dedicado.
@@ -185,14 +196,14 @@ Siga a [Instalação](#4-instalação) no robô e nos dois notebooks.
 Em **cada terminal** de **cada máquina**, informe apenas o IP do robô (o `ROS_IP` local é descoberto automaticamente):
 
 ```bash
-cd ~/catkin_ws/src/pioneer_reactive_nav
-source tools/ros_network.sh 192.168.0.10
+cd ~/catkin_ws/src/Navegacao_Reativa_Autonoma_e_Comparacao_de_Sensores_no_Pioneer_3DX-ROS1
+source tools/ros_network.sh 192.168.1.100
 ```
 
 Saída esperada (no notebook 1, por exemplo):
 
 ```
-[ros_network] ROS_MASTER_URI = http://192.168.0.10:11311
+[ros_network] ROS_MASTER_URI = http://192.168.1.100:11311
 [ros_network] ROS_IP         = 192.168.0.21
 ```
 
@@ -207,7 +218,7 @@ O resultado equivale a configurar manualmente:
 Para não repetir o comando a cada terminal, acrescente ao final do `~/.bashrc` (ajustando o IP do robô; as linhas funcionam em qualquer máquina):
 
 ```bash
-source ~/catkin_ws/src/pioneer_reactive_nav/tools/ros_network.sh 192.168.0.10
+source ~/catkin_ws/src/Navegacao_Reativa_Autonoma_e_Comparacao_de_Sensores_no_Pioneer_3DX-ROS1/tools/ros_network.sh 192.168.1.100
 ```
 
 > Se a detecção automática falhar (ex.: várias interfaces de rede), passe a interface: `source tools/ros_network.sh 192.168.0.10 wlp3s0`.
@@ -217,7 +228,7 @@ source ~/catkin_ws/src/pioneer_reactive_nav/tools/ros_network.sh 192.168.0.10
 No **robô** (por SSH, se preferir: `ssh usuario@192.168.0.10`):
 
 ```bash
-source ~/catkin_ws/src/pioneer_reactive_nav/tools/ros_network.sh 192.168.0.10
+source ~/catkin_ws/src/Navegacao_Reativa_Autonoma_e_Comparacao_de_Sensores_no_Pioneer_3DX-ROS1/tools/ros_network.sh 192.168.1.100
 roscore
 ```
 
@@ -253,6 +264,7 @@ No PC do robô (onde o SICK está ligado), com o `ROS_MASTER_URI` do master em u
 roslaunch pioneer_reactive_nav robot_bringup.launch lms2xx_port:=/dev/ttyS1
 ```
 
+<<<<<<< HEAD
 Argumentos do launch:
 
 | Argumento | Padrão | Descrição |
@@ -276,6 +288,25 @@ rostopic echo -n1 /scan/header/frame_id
 Se o `frame_id` for diferente de `laser`, reinicie o launch com `lidar_frame:=<valor>`.
 
 Habilite os motores se necessário:
+=======
+Argumentos principais (ajuste conforme o hardware do laboratório):
+
+```bash
+# RPLIDAR em /dev/ttyUSB1, 256000 baud (A2M12 / S1)
+roslaunch pioneer_reactive_nav robot_bringup.launch \
+    port:=/dev/ttyUSB0 lidar_driver:=rplidar lidar_port:=/dev/ttyUSB1 lidar_baud:=256000
+
+# Hokuyo Ethernet
+roslaunch pioneer_reactive_nav robot_bringup.launch lidar_driver:=urg lidar_ip:=192.168.0.11
+
+# LIDAR iniciado manualmente (ex.: SICK)
+roslaunch pioneer_reactive_nav robot_bringup.launch lidar_driver:=none
+```
+
+Ajuste também a posição do LIDAR em relação ao centro do robô: `laser_x`, `laser_y`, `laser_z`, `laser_yaw`.
+
+Em outro terminal do robô, **habilite os motores**:
+>>>>>>> 165a4ee64c617c88a1f827a4fe73c4a5fa281600
 
 ```bash
 rostopic echo -n1 /RosAria/motors_state        # true = habilitados
@@ -437,7 +468,7 @@ Opções úteis: `--near 0.30` (limiar de quase-colisão, em metros), `--cell 0.
 |---|---|
 | **Resolução espacial** | Obstáculos finos (perna de cadeira, cano) detectados ou não; ecos no RViz; suavidade das trajetórias (`trajetorias.png`) |
 | **Zonas cegas e alcance** | `folga_min_*` e `quase_colisoes_lidar`; comportamento perto de paredes inclinadas (reflexão especular dos sonars) e de obstáculos muito próximos |
-| **Ruído e taxa de atualização** | Saída de `static_noise.py`; `rostopic hz`; `taxa_scan_hz` e `taxa_sonar_hz` em `summary.csv`. Lembre que o LMS291 via RS-232 a 38400 baud tem taxa de scan limitada pela serial |
+| **Ruído e taxa de atualização** | Saída de `static_noise.py`; `rostopic hz`; `taxa_scan_hz` e `taxa_sonar_hz` em `summary.csv` |
 | **Desempenho geral** | `distancia_percorrida_m`, `cobertura_estimada_pct`, `pct_tempo_parado_ou_girando` |
 
 Observação: a odometria acumula erro de deriva. Trate as trajetórias como aproximadas e compare execuções curtas e com a mesma posição inicial.
@@ -467,9 +498,13 @@ Observação: a odometria acumula erro de deriva. Trate as trajetórias como apr
 | `/RosAria/sonar` não publica | Sonars desabilitados ou ausentes. Confira com `rostopic list` e no RViz; verifique a configuração do robô. |
 | Sonars aparecem em posição errada no RViz | O controlador assume pontos do sonar em coordenadas do robô. Verifique o `frame_id` da nuvem e a TF correspondente. |
 | Obstáculos do LIDAR aparecem girados/espelhados | Ajuste `lidar_angle_offset` e/ou `lidar_invert` em `sensor_config.yaml`. |
+<<<<<<< HEAD
 | `/scan` não aparece com o LMS291 | Confira a alimentação de 24 V, a porta (`/dev/ttyS1`), o baud (38400 em RS-232) e as permissões; desligue/ligue o LMS e rode o launch de novo. |
 | `Permission denied` na porta serial | `sudo usermod -aG dialout $USER` e novo login (ou rode como `root`). |
 | `catkin_make`: `CMake 3.0.2 or higher is required` | O `CMakeLists.txt` deve usar `cmake_minimum_required(VERSION 2.8.3)` e o `package.xml` o formato 1 (versão atual do repositório). |
+=======
+| `Permission denied: /dev/ttyUSB0` | `sudo usermod -aG dialout $USER` e novo login. |
+>>>>>>> 165a4ee64c617c88a1f827a4fe73c4a5fa281600
 | Robô não se move | Motores desabilitados: `rosservice call /RosAria/enable_motors "{}"`. Confirme o tópico com `rostopic echo /RosAria/cmd_vel`. |
 | Robô para sozinho com `Sem dados do sensor` | O sensor selecionado não está publicando. Confira `rostopic hz` do tópico. |
 | Robô gira demais / roça nas paredes | Ajuste `stop_distance`, `clear_distance`, `k_rep` e `max_range` (iguais nos dois sensores). |

@@ -2,15 +2,39 @@
   <!-- Rodar NO PC DO ROBO (onde o SICK esta ligado).
        Compativel com ROS Hydro (sem $(eval)). O roscore deve estar ativo.
 
+<<<<<<< HEAD
        Se o RosAria JA estiver rodando (confira: rosnode list), use start_rosaria:=false.
        Nunca suba dois RosAria: o ROS derruba o no mais antigo de mesmo nome. -->
+=======
+  <!-- Pioneer.
+       start_rosaria:=false se o RosAria JÁ estiver rodando (nesta ou em outra máquina da rede).
+       Nunca suba dois RosAria: o ROS derruba o nó mais antigo de mesmo nome. -->
+  <arg name="start_rosaria" default="true"/>
+  <arg name="port" default="/dev/ttyS0"/>
+>>>>>>> 165a4ee64c617c88a1f827a4fe73c4a5fa281600
 
   <arg name="start_rosaria" default="false"/>
   <arg name="port"          default="/dev/ttyS0"/>
 
+<<<<<<< HEAD
   <!-- SICK LMS291-S05 por RS-232 (driver sicktoolbox_wrapper/sicklms).
        RS-232 suporta ate 38400 baud. start_lidar:=false para subir o driver manualmente. -->
   <arg name="start_lidar"       default="true"/>
+=======
+  <!-- SICK TiM (pacote sick_tim): USB ou Ethernet.
+       sick_tim_node: executável do seu modelo, ex.: sick_tim551_2050001,
+                      sick_tim571_2050101, sick_tim310, sick_tim310s01 ...
+       sick_hostname: vazio = USB; IP do sensor = Ethernet (TiM5xx: padrão 192.168.0.1) -->
+  <arg name="sick_tim_node" default="sick_tim571_2050101"/>
+  <arg name="sick_hostname" default=""/>
+
+  <!-- SICK LMS1xx (Ethernet) -->
+  <arg name="lms_host" default="192.168.0.1"/>
+
+  <!-- SICK LMS2xx (serial; LMS200/LMS291-S05) - PADRÃO DESTE PROJETO.
+       RS-232 suporta até 38400 baud (500000 só com adaptador RS-422).
+       Dica: use um nome estável, ex.: /dev/serial/by-id/usb-... (ls -l /dev/serial/by-id/) -->
+>>>>>>> 165a4ee64c617c88a1f827a4fe73c4a5fa281600
   <arg name="lms2xx_port"       default="/dev/ttyS1"/>
   <arg name="lms2xx_baud"       default="38400"/>
   <arg name="lms2xx_angle"      default="180"/>
@@ -27,6 +51,18 @@
   <group if="$(arg start_rosaria)">
     <node pkg="rosaria" type="RosAria" name="RosAria" output="screen">
       <param name="port" value="$(arg port)"/>
+<<<<<<< HEAD
+=======
+    </node>
+  </group>
+
+  <!-- SICK TiM -->
+  <group if="$(eval arg('lidar_driver') == 'sick_tim')">
+    <node pkg="sick_tim" type="$(arg sick_tim_node)" name="sick_tim" output="screen">
+      <param name="frame_id" value="$(arg lidar_frame)"/>
+      <param name="hostname" value="$(arg sick_hostname)"
+             unless="$(eval arg('sick_hostname') == '')"/>
+>>>>>>> 165a4ee64c617c88a1f827a4fe73c4a5fa281600
     </node>
   </group>
 
