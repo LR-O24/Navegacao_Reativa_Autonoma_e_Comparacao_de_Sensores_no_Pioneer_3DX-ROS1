@@ -509,8 +509,16 @@ Observação: a odometria acumula erro de deriva. Trate as trajetórias como apr
 | Robô para sozinho com `Sem dados do sensor` | O sensor selecionado não está publicando. Confira `rostopic hz` do tópico. |
 | Robô gira demais / roça nas paredes | Ajuste `stop_distance`, `clear_distance`, `k_rep` e `max_range` (iguais nos dois sensores). |
 
-## 11. Autores
+## 11. Vídeo de demonstração
 
-Grupo: `<Nome 1>`, `<Nome 2>`, `<Nome 3>`, `<Nome 4>`
-Disciplina: `<Disciplina / Professor / Semestre>`
+[![Vídeo de demonstração – Navegação reativa no Pioneer 3DX](https://img.youtube.com/vi/SEU_ID/hqdefault.jpg)](https://www.youtube.com/watch?v=SEU_ID)
+
+▶️ **Link direto:** [https://www.youtube.com/watch?v=SEU_ID](https://youtu.be/hxqPdX2WATE)
+
+A troca entre os perfis é feita **apenas pelo arquivo de configuração**, sem alterar o código do controlador. O vídeo também mostra o monitoramento remoto (RViz e `rostopic hz`) nas máquinas da rede ROS.
+
+## 12. Autores
+
+Grupo: `<LUCAS ROSSI>`, `<PEDRO HENRIQUE>`, `<VITOR HORÁCIO>`, `<ZAQUEU FINAMORE>`
+Disciplina: `<ECAA011  /  GUILHERME SOUSA BASTOS  / 2026.2>`
 Licença: MIT
